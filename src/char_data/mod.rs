@@ -11,17 +11,20 @@
 
 mod tables;
 
-pub use self::tables::{BidiClass, UNICODE_VERSION};
+pub use self::tables::BidiClass;
 #[cfg(feature = "hardcoded-data")]
 use core::char;
 #[cfg(feature = "hardcoded-data")]
 use core::cmp::Ordering::{Equal, Greater, Less};
 
 #[cfg(feature = "hardcoded-data")]
-use self::tables::bidi_class_table;
+use self::tables::BIDI_CLASS;
 use crate::BidiClass::*;
 #[cfg(feature = "hardcoded-data")]
 use crate::BidiDataSource;
+
+/// The [Unicode version](http://www.unicode.org/versions/) of data
+pub const UNICODE_VERSION: (u64, u64, u64) = (15, 0, 0);
 
 /// Hardcoded Bidi data that ships with the unicode-bidi crate.
 ///
@@ -32,14 +35,14 @@ pub struct HardcodedBidiData;
 #[cfg(feature = "hardcoded-data")]
 impl BidiDataSource for HardcodedBidiData {
     fn bidi_class(&self, c: char) -> BidiClass {
-        bsearch_range_value_table(c, bidi_class_table)
+        bsearch_range_value_table(c, BIDI_CLASS)
     }
 }
 
 /// Find the `BidiClass` of a single char.
 #[cfg(feature = "hardcoded-data")]
 pub fn bidi_class(c: char) -> BidiClass {
-    bsearch_range_value_table(c, bidi_class_table)
+    bsearch_range_value_table(c, BIDI_CLASS)
 }
 
 pub fn is_rtl(bidi_class: BidiClass) -> bool {
@@ -50,7 +53,8 @@ pub fn is_rtl(bidi_class: BidiClass) -> bool {
 }
 
 #[cfg(feature = "hardcoded-data")]
-fn bsearch_range_value_table(c: char, r: &'static [(char, char, BidiClass)]) -> BidiClass {
+fn bsearch_range_value_table(c: char, r: &'static [(u32, u32, BidiClass)]) -> BidiClass {
+    let c = c as u32;
     match r.binary_search_by(|&(lo, hi, _)| {
         if lo <= c && c <= hi {
             Equal
